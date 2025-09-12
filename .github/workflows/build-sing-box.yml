@@ -1,0 +1,45 @@
+name: build-sing-box-1.10.0
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'net/sing-box/**'
+      - '.github/workflows/build-sing-box.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          # Базовый набор под OpenWrt 24.10.2 — расширяй при желании
+          - x86_64-24.10.2
+          - i386_pentium4-24.10.2
+          - aarch64_generic-24.10.2
+          - aarch64_cortex-a53-24.10.2
+          - arm_cortex-a7_neon-vfpv4-24.10.2
+          - arm_cortex-a9-24.10.2
+          - mips_24kc-24.10.2
+          - mipsel_24kc-24.10.2
+          - loongarch64-24.10.2
+          - riscv64-24.10.2
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Build via OpenWrt SDK
+        uses: openwrt/gh-action-sdk@main
+        env:
+          ARCH: ${{ matrix.arch }}
+          PACKAGES: sing-box
+          V: s
+
+      - name: Upload .ipk artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.arch }}-sing-box-1.10.0
+          path: |
+            bin/packages/**/*.ipk
+            logs/**/*.log
